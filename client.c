@@ -15,15 +15,15 @@ int main() {
 
   struct sockaddr_in server_addr = {
       .sin_family = PF_INET,
-      .sin_port = 4242,
+      .sin_port = htons(4242),
       .sin_addr = inet_addr("127.0.0.1"),
       .sin_zero = 0,
   };
 
   int ret =
       connect(active, (struct sockaddr *)&server_addr, sizeof(server_addr));
-  if (ret == -1) {
-    write(1, "error\n", 6);
+  if (ret == -1 || active == -1) {
+    write(2, "error\n", 6);
     return 1;
   }
 
