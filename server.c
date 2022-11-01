@@ -126,12 +126,12 @@ char *ft_strjoin(char *s1, char *s2) {
   return s3;
 }
 
-int passive_sock() {
+int passive_sock(int port) {
   int passive = socket(PF_INET, SOCK_STREAM, 0);
 
   struct sockaddr_in server_addr = {
       .sin_family = PF_INET,
-      .sin_port = htons(4242),
+      .sin_port = htons(port),
       .sin_addr = inet_addr("127.0.0.1"),
       .sin_zero = 0,
   };
@@ -197,7 +197,8 @@ void handle_disconnection(int fd) {
 }
 
 void read_event(int fd) {
-  int read_size = read(fd, g_buf, BUFFERSIZE);
+  printf("%d\n", fcntl(fd, F_GETFL) & O_NONBLOCK);
+  int read_size = recv(fd, g_buf, BUFFERSIZE, MSG_DONTWAIT);
   g_buf[read_size] = 0;
 
   syscall_check(read_size);
@@ -230,7 +231,8 @@ void write_event(int fd) {
   user->buf[i] = 0;
 }
 
-int main() {
+int main(int argc, char **argv) {
+  if (argc != 2) return 1;
   FD_ZERO(&read_backup);
   FD_ZERO(&write_backup);
 
@@ -239,7 +241,7 @@ int main() {
       .tv_usec = 0,
   };
 
-  int passive = passive_sock();
+  int passive = passive_sock(atoi(argv[1]));
 
   nfds = passive + 1;
   while (1) {
